@@ -9,6 +9,7 @@ export interface ConstraintTimelineEvent {
   id: string
   atSecond: number
   constraint: Constraint
+  replaceConstraintId?: string
 }
 
 export interface LevelScript extends LevelConfig {
