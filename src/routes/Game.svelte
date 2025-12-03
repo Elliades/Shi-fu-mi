@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tutorialLevel } from '../lib/levels/fixtures'
+  import AttemptsGrid, { type AttemptRow } from '../lib/components/AttemptsGrid.svelte'
   import { createGameController, type AttemptResult, type Move } from '../domain/controller'
   import { createConstraintScheduler } from '../domain/constraintScheduler'
 
@@ -11,10 +12,7 @@
   })
   const scheduler = createConstraintScheduler(level.constraintTimeline)
 
-  type AttemptRecord = {
-    moves: Move[]
-    result: AttemptResult
-  }
+  type AttemptRecord = AttemptRow
 
   const moveSymbols: Record<Move, string> = {
     rock: 'R',
@@ -33,7 +31,6 @@
   let rowLength = level.baseRowLength
   let activeRow: Move[] = []
   let attempts: AttemptRecord[] = []
-  let latestResult: AttemptResult | null = null
   let isWin = false
 
   const updateRowLength = () => {
@@ -66,8 +63,8 @@
   const handleSubmit = () => {
     if (isWin || activeRow.length !== rowLength) return
     const result = controller.submitAttempt(activeRow)
-    attempts = [...attempts, { moves: activeRow, result }]
-    latestResult = result
+    const attemptId = `attempt-${attempts.length + 1}`
+    attempts = [...attempts, { id: attemptId, moves: activeRow, result }]
     activeRow = []
     isWin = result.isWin
   }
@@ -133,20 +130,15 @@
       </div>
     </section>
 
-    <section
-      aria-label="Attempts"
-      class="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-4"
-    >
+    <section aria-label="Attempts" class="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-4">
       <div class="flex items-center justify-between">
         <p class="text-sm font-medium text-slate-400">Attempts: {attempts.length}</p>
         {#if isWin}
           <span class="text-sm font-semibold text-win">Puzzle solved!</span>
         {/if}
       </div>
-      <div class="mt-2 text-sm text-slate-300">
-        <p>Wins: {latestResult?.score.win ?? 0}</p>
-        <p>Ties: {latestResult?.score.tie ?? 0}</p>
-        <p>Losses: {latestResult?.score.loss ?? 0}</p>
+      <div class="mt-4">
+        <AttemptsGrid attempts={attempts} />
       </div>
     </section>
   </div>
