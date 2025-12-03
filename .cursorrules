@@ -1,0 +1,51 @@
+# Cursor Rules · Shifumi Constraint Puzzle
+
+## Game Overview
+- Goal: deduce a predetermined sequence of moves (rock, paper, scissor) that yields a displayed target score (e.g., 2 wins, 2 ties, 1 loss) against a hidden computer itinerary; “erase” simply removes the most recent box in the current row prior to submission.
+- Row length varies by level (3–10 boxes). Some constraint events can append extra boxes mid-run, expanding the active row length.
+- Player input UI mirrors Wordle: each row has the same number of boxes as the sequence length; the target score for the round is shown above the grid.
+- Moves are locked in across a row before submission; each new attempt spawns a fresh row.
+
+## Resolution & Feedback
+- After a row is submitted, compare each player move to the matching computer move.
+- Color feedback per box reflects the duel outcome for that slot:
+  - Green: player wins the encounter.
+  - Yellow: encounter is a tie (e.g., paper vs paper).
+  - Red: player loses or the slot violates a hard constraint.
+- Aggregate score (wins, ties, losses) is tallied per row to determine if the attempt fulfills the displayed target.
+
+## Constraints & Progression
+- Baseline state: only the target score guides the player.
+- As time elapses (every X seconds), overlay extra constraints such as “Box 3 must be a win,” “Final box must be rock,” or “Add another box.”
+- Constraints stack and remain active until the game is solved. Designers may replace an older constraint with a new one, but nothing expires automatically.
+- Violating a constraint should immediately flag the relevant box (e.g., outline/error marker) before submission when possible.
+
+## Win Condition
+- Player wins once an entered combination simultaneously satisfies all active constraints and matches the exact target score distribution.
+- Optional systems such as attempt caps, timers, or score multipliers can layer on top of this core loop.
+
+## Implementation Notes
+- Keep the UI tap-friendly for phones; defer multi-touch gestures.
+- Consider background generation of the hidden computer itinerary plus constraint schedule per level so runs are deterministic and testable.
+- Provide hooks for telemetry (e.g., attempts taken, constraint breaches) to tune future puzzle difficulty.
+
+## Tech Stack
+- Frontend: Vite + Svelte + TypeScript for reactive, lean code with strong typing.
+- Styling & Motion: Tailwind CSS plus a lightweight motion helper (`motion-one`/`svelte-motion`) to drive sharp flip/pulse animations and respect `prefers-reduced-motion`.
+- Tests: Vitest + Testing Library for DOM-focused units; Playwright for functional (touch) scenarios; all features developed via TDD.
+- Tooling: ESLint + Prettier, Husky or simple npm script guard to run tests before commit; CI runs lint, unit, functional, and build.
+
+## Architecture
+- `src/domain/`: pure TS utilities (score evaluation, constraint scheduler, level parser) with exhaustive unit tests.
+- `src/stores/`: Svelte writable/derived stores for attempts, timers, constraint stack, and animation flags; deterministic seeds for repeatable tests.
+- `src/components/`: modular Svelte components (`GridRow`, `ConstraintTicker`, `HUD`, `HhmiFeedback`, etc.) each with Testing Library specs simulating input/feedback.
+- `src/routes/Game.svelte`: orchestrates stores, handles keyboard/touch input (including “erase”), triggers submissions, and wires animation hooks.
+- `src/lib/levels/`: data fixtures describing computer itineraries, constraint timelines, and metadata (row length, timers) to keep runs deterministic.
+- Animations: box reveals use staggered flips; constraint warnings pulse/shake; victory cascades plus confetti (CSS-driven) with fallbacks.
+
+## Development Workflow
+1. Start with failing Vitest specs for domain logic, then implement.
+2. Add store-level tests covering timers, constraint stacking, undo, and win detection.
+3. Build components with Testing Library, simulating pointer/touch input plus verifying ARIA/focus.
+4. Write Playwright end-to-end flows that tap through full puzzles, ensuring colors, constraints, and Hhmi effects behave on mobile breakpoints.
+5. Keep hot reload via `npm run dev`; use `npm run test` for unit + component suites and `npm run test:e2e` (Playwright) before commits/deploys.

@@ -1,0 +1,23 @@
+version: 1
+project:
+  name: shifumi-constraint-puzzle
+  description: >
+    Wordle-style shifumi puzzle with stacking constraints, sharp animations,
+    and strict TDD requirements.
+reviews:
+  allow_self_review: false
+  min_approvals: 1
+  checklist:
+    - "All new logic has failing tests before implementation (TDD)."
+    - "UI interactions are covered by component or Playwright tests."
+    - "Animations respect prefers-reduced-motion."
+checks:
+  - name: "Type + lint"
+    command: "npm run check"
+  - name: "Unit tests"
+    command: "npm test"
+  - name: "Coverage"
+    command: "npm run test:coverage"
+notifications:
+  success: true
+  failure: true
