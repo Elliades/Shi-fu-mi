@@ -1,47 +1,22 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import Game from './routes/Game.svelte'
 </script>
 
-<main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
+<main class="bg-surface min-h-screen px-4 py-8 text-slate-50 sm:px-8">
+  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+    <header class="space-y-3 text-center sm:text-left">
+      <p class="text-sm uppercase tracking-[0.3em] text-slate-400">
+        Constraint puzzle prototype
+      </p>
+      <h1 class="font-display text-3xl font-semibold sm:text-4xl">
+        Shifumi · wordle-style deduction with stacking constraints
+      </h1>
+      <p class="text-base text-slate-300">
+        Early build focused on domain + state. Visual grid, constraint ticker, and touch
+        input land in upcoming iterations.
+      </p>
+    </header>
+
+    <Game />
   </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
