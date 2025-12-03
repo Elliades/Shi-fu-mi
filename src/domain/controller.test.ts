@@ -104,4 +104,46 @@ describe('GameController', () => {
     const result = controller.submitAttempt(['paper', 'paper', 'paper', 'scissor'])
     expect(result.score).toEqual({ win: 1, tie: 1, loss: 2 })
   })
+
+  it('shrinks row length when a structural constraint is replaced', () => {
+    controller.addConstraint({
+      id: 'extra-box',
+      kind: 'structural',
+      effect: 'append_box',
+      count: 1,
+    })
+    expect(controller.getRowLength()).toBe(4)
+
+    controller.addConstraint(
+      {
+        id: 'replacement',
+        kind: 'slot_move',
+        index: 0,
+        move: 'rock',
+      },
+      { replaceId: 'extra-box' },
+    )
+
+    expect(controller.getRowLength()).toBe(3)
+  })
+
+  it('reports constraint violations when a slot index exceeds current row length', () => {
+    controller.addConstraint({
+      id: 'slot-four-win',
+      kind: 'slot_outcome',
+      index: 3,
+      outcome: 'win',
+    })
+
+    const result = controller.submitAttempt(['paper', 'paper', 'paper'])
+
+    expect(result.constraintViolations).toEqual([
+      {
+        id: 'slot-four-win',
+        description: 'Slot 4 must be win',
+        index: 3,
+      },
+    ])
+    expect(result.constraintsSatisfied).toBe(false)
+  })
 })

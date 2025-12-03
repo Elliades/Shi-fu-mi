@@ -93,27 +93,57 @@ export function createGameController(config: LevelConfig): GameController {
     throw new Error('Row length cannot exceed available computer moves')
   }
 
+  const baseRowLength = currentRowLength
+  const structuralExtensions = new Map<string, number>()
   let constraints: Constraint[] = []
+
+  const structuralExtensionTotal = () =>
+    Array.from(structuralExtensions.values()).reduce((sum, count) => sum + count, 0)
+
+  const recomputeRowLength = () => {
+    currentRowLength = Math.min(baseRowLength + structuralExtensionTotal(), maxRowLength)
+  }
+
+  const removeConstraint = (constraintId?: string) => {
+    if (!constraintId) return
+    const target = constraints.find((constraint) => constraint.id === constraintId)
+    if (!target) {
+      constraints = constraints.filter((constraint) => constraint.id !== constraintId)
+      return
+    }
+
+    constraints = constraints.filter((constraint) => constraint.id !== constraintId)
+    if (target.kind === 'structural' && target.effect === 'append_box') {
+      structuralExtensions.delete(target.id)
+      recomputeRowLength()
+    }
+  }
 
   const addConstraint = (
     constraint: Constraint,
     options?: { replaceId?: string },
   ) => {
     if (options?.replaceId) {
-      constraints = constraints.filter((c) => c.id !== options.replaceId)
+      removeConstraint(options.replaceId)
     }
-
-    constraints = constraints.filter((c) => c.id !== constraint.id)
-    constraints = [...constraints, constraint]
+    removeConstraint(constraint.id)
 
     if (constraint.kind === 'structural' && constraint.effect === 'append_box') {
-      const requested = currentRowLength + constraint.count
-      if (requested > maxRowLength) {
+      const proposedExtension = structuralExtensionTotal() + constraint.count
+      const requestedLength = baseRowLength + proposedExtension
+      if (requestedLength > maxRowLength) {
         throw new Error(
           `Cannot append ${constraint.count} boxes beyond itinerary length of ${maxRowLength}`,
         )
       }
-      currentRowLength = requested
+      structuralExtensions.set(constraint.id, constraint.count)
+      recomputeRowLength()
+    }
+
+    constraints = [...constraints, constraint]
+
+    if (constraint.kind !== 'structural') {
+      recomputeRowLength()
     }
   }
 
@@ -219,12 +249,21 @@ function collectViolations(
   const violations: ConstraintViolation[] = []
 
   for (const constraint of constraints) {
-    if (
-      (constraint.kind === 'slot_outcome' || constraint.kind === 'slot_move') &&
-      constraint.index < rowLength
-    ) {
+    if (constraint.kind === 'slot_outcome' || constraint.kind === 'slot_move') {
+      if (constraint.index >= rowLength) {
+        violations.push({
+          id: constraint.id,
+          description:
+            constraint.kind === 'slot_outcome'
+              ? `Slot ${constraint.index + 1} must be ${constraint.outcome}`
+              : `Slot ${constraint.index + 1} must be ${constraint.move}`,
+          index: constraint.index,
+        })
+        continue
+      }
+
       const slot = slotResults[constraint.index]
-      if (slot.violatedConstraintIds.includes(constraint.id)) {
+      if (slot?.violatedConstraintIds.includes(constraint.id)) {
         violations.push({
           id: constraint.id,
           description:
