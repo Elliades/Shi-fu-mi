@@ -28,3 +28,24 @@
 - Keep the UI tap-friendly for phones; defer multi-touch gestures.
 - Consider background generation of the hidden computer itinerary plus constraint schedule per level so runs are deterministic and testable.
 - Provide hooks for telemetry (e.g., attempts taken, constraint breaches) to tune future puzzle difficulty.
+
+## Tech Stack
+- Frontend: Vite + Svelte + TypeScript for reactive, lean code with strong typing.
+- Styling & Motion: Tailwind CSS plus a lightweight motion helper (`motion-one`/`svelte-motion`) to drive sharp flip/pulse animations and respect `prefers-reduced-motion`.
+- Tests: Vitest + Testing Library for DOM-focused units; Playwright for functional (touch) scenarios; all features developed via TDD.
+- Tooling: ESLint + Prettier, Husky or simple npm script guard to run tests before commit; CI runs lint, unit, functional, and build.
+
+## Architecture
+- `src/domain/`: pure TS utilities (score evaluation, constraint scheduler, level parser) with exhaustive unit tests.
+- `src/stores/`: Svelte writable/derived stores for attempts, timers, constraint stack, and animation flags; deterministic seeds for repeatable tests.
+- `src/components/`: modular Svelte components (`GridRow`, `ConstraintTicker`, `HUD`, `HhmiFeedback`, etc.) each with Testing Library specs simulating input/feedback.
+- `src/routes/Game.svelte`: orchestrates stores, handles keyboard/touch input (including “erase”), triggers submissions, and wires animation hooks.
+- `src/lib/levels/`: data fixtures describing computer itineraries, constraint timelines, and metadata (row length, timers) to keep runs deterministic.
+- Animations: box reveals use staggered flips; constraint warnings pulse/shake; victory cascades plus confetti (CSS-driven) with fallbacks.
+
+## Development Workflow
+1. Start with failing Vitest specs for domain logic, then implement.
+2. Add store-level tests covering timers, constraint stacking, undo, and win detection.
+3. Build components with Testing Library, simulating pointer/touch input plus verifying ARIA/focus.
+4. Write Playwright end-to-end flows that tap through full puzzles, ensuring colors, constraints, and Hhmi effects behave on mobile breakpoints.
+5. Keep hot reload via `npm run dev`; use `npm run test` for unit + component suites and `npm run test:e2e` (Playwright) before commits/deploys.
