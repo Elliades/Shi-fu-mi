@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tutorialLevel } from '../lib/levels/fixtures'
   import AttemptsGrid, { type AttemptRow } from '../lib/components/AttemptsGrid.svelte'
+  import InputPad from '../lib/components/InputPad.svelte'
   import { createGameController, type AttemptResult, type Move } from '../domain/controller'
   import { createConstraintScheduler } from '../domain/constraintScheduler'
 
@@ -19,14 +20,6 @@
     paper: 'P',
     scissor: 'S',
   }
-
-  const moveLabels: Record<Move, string> = {
-    rock: 'Rock',
-    paper: 'Paper',
-    scissor: 'Scissor',
-  }
-
-  const moveOrder: Move[] = ['rock', 'paper', 'scissor']
 
   let rowLength = level.baseRowLength
   let activeRow: Move[] = []
@@ -99,36 +92,14 @@
       </div>
     </section>
 
-    <section aria-label="Input pad" class="rounded-2xl border border-slate-800/80 bg-slate-900/30 p-4">
-      <p class="text-sm font-medium text-slate-400">Moves</p>
-      <div class="mt-3 flex flex-wrap gap-3">
-        {#each moveOrder as move}
-          <button
-            type="button"
-            class="btn flex-1 min-w-[120px]"
-            aria-label={moveLabels[move]}
-            on:click={() => handleMove(move)}
-            disabled={isWin}
-          >
-            {moveLabels[move]}
-          </button>
-        {/each}
-      </div>
-      <div class="mt-4 flex gap-3">
-        <button type="button" class="btn flex-1" on:click={handleErase} aria-label="Erase last move" disabled={activeRow.length === 0 || isWin}>
-          Erase
-        </button>
-        <button
-          type="button"
-          class="btn flex-1 bg-accent text-black hover:bg-orange-500"
-          aria-label="Submit attempt"
-          on:click={handleSubmit}
-          disabled={activeRow.length !== rowLength || isWin}
-        >
-          Submit attempt
-        </button>
-      </div>
-    </section>
+    <InputPad
+      disablePad={isWin}
+      canErase={activeRow.length > 0}
+      canSubmit={activeRow.length === rowLength && !isWin}
+      on:move={(event) => handleMove(event.detail.move)}
+      on:erase={handleErase}
+      on:submit={handleSubmit}
+    />
 
     <section aria-label="Attempts" class="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-4">
       <div class="flex items-center justify-between">
